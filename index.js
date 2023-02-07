@@ -8,8 +8,6 @@ const {
 
 class Plugin {
   constructor(params = {}) {
-    this.onRequestStart = this.onRequestStart.bind(this);
-    this.onRequestEnd = this.onRequestEnd.bind(this);
     Object.entries(params).forEach(([attr, value]) => {
       this[attr] = value;
     });
@@ -25,32 +23,24 @@ class Plugin {
     })();
   }
 
-  async onRequestStart(body) {
-    const events = {
-      Entries: [{
-        Detail: JSON.stringify({
-          env,
-          ...body
-        }),
-        DetailType: this.DetailType || 'userActivity',
-        Source: this.Source || 'ti2',
-      }],
-    };
-    await this.cwEvents.putEvents(events).promise();
-  }
-
-  async onRequestEnd(body) {
-    const events = {
-      Entries: [{
-        Detail: JSON.stringify({
-          env,
-          ...body
-        }),
-        DetailType: this.DetailType || 'userActivity',
-        Source: this.Source || 'ti2',
-      }],
-    };
-    await this.cwEvents.putEvents(events).promise();
+  eventHandler(eventEmmiter) {
+    const eventsArr = (this.events2log || 'request.*').split(',');
+    const pluginObj = this;
+    eventsArr.forEach(eventName => {
+      eventEmmiter.on(eventName, async function (body) {
+        const events = {
+          Entries: [{
+            Detail: JSON.stringify({
+              env,
+              ...body
+            }),
+            DetailType: this.event,
+            Source: pluginObj.Source || 'ti2',
+          }],
+        };
+        await pluginObj.cwEvents.putEvents(events).promise();
+      });
+    });
   }
 }
 
