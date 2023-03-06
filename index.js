@@ -31,18 +31,17 @@ class Plugin {
     const pluginObj = this;
     eventsArr.forEach(eventName => {
       eventEmmiter.on(eventName, async function (body) {
-        const detail = JSON.stringify({
-          env,
-          ...body,
-        });
         const events = {
           Entries: [{
-            Detail: detail,
+            Detail: JSON.stringify({
+              env,
+              ...body,
+            }),
             DetailType: this.event,
             Source: pluginObj.Source || 'ti2',
           }],
         };
-        if (byteSize(body) < (250  * 1e3)) {
+        if (byteSize(JSON.stringify(events)) < (200  * 1e3)) {
           await pluginObj.cwEvents.putEvents(events).promise();
         } else {
           console.log('unable to log to cloudwatch (size constraint)', events);
