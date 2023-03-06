@@ -1,10 +1,13 @@
 const aws = require('aws-sdk');
+const  { Blob } = require('buffer');
 
 const {
   env: {
     NODE_ENV: env,
   },
 } = process;
+
+const byteSize = str => new Blob([str]).size;
 
 class Plugin {
   constructor(params = {}) {
@@ -28,17 +31,22 @@ class Plugin {
     const pluginObj = this;
     eventsArr.forEach(eventName => {
       eventEmmiter.on(eventName, async function (body) {
+        const detail = JSON.stringify({
+          env,
+          ...body,
+        });
         const events = {
           Entries: [{
-            Detail: JSON.stringify({
-              env,
-              ...body
-            }),
+            Detail: detail,
             DetailType: this.event,
             Source: pluginObj.Source || 'ti2',
           }],
         };
-        await pluginObj.cwEvents.putEvents(events).promise();
+        if (byteSize(body) < (250  * 1e3)) {
+          await pluginObj.cwEvents.putEvents(events).promise();
+        } else {
+          console.log('unable to log to cloudwatch (size constraint)', events);
+        }
       });
     });
   }
