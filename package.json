@@ -1,6 +1,6 @@
 {
   "name": "ti2-cloudwatchlog",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ti2's cloudwatch log plugin",
   "main": "index.js",
   "scripts": {
@@ -17,11 +17,14 @@
   },
   "homepage": "https://github.com/TourConnect/ti2-cloudwatchlog#readme",
   "dependencies": {
-    "aws-sdk": "^2.1308.0"
+    "aws-sdk": "^2.1308.0",
+    "ramda": "^0.28.0"
   },
   "devDependencies": {
     "eslint": "^8.14.0",
     "eslint-config-airbnb": "^19.0.4",
-    "eslint-plugin-import": "^2.26.0"
+    "eslint-plugin-import": "^2.26.0",
+    "eventemitter2": "^6.4.9",
+    "jest": "^29.5.0"
   }
 }
