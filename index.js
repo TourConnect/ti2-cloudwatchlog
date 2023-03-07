@@ -37,7 +37,7 @@ class Plugin {
             Detail: JSON.stringify(limitObjectSize({
               env,
               ...body,
-            }, OBJECT_SIZE_LIMIT)),
+            }, (OBJECT_SIZE_LIMIT - 75))),
             DetailType: this.event,
             Source: pluginObj.Source || 'ti2',
           }],

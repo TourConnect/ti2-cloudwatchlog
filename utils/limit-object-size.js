@@ -1,8 +1,11 @@
 const R = require('ramda');
+const  { Blob } = require('buffer');
+
+const byteSize = str => new Blob([str]).size;
 
 const limitObjectSize = (obj, maxBytes) => {
   // Get the current size of the object
-  const initialSize = JSON.stringify(obj).length;
+  const initialSize = byteSize(JSON.stringify(obj));
 
   // Check if the object is already within the byte limit
   if (initialSize <= maxBytes) {
@@ -20,14 +23,14 @@ const limitObjectSize = (obj, maxBytes) => {
     const pathName = key.split('.');
     const valueEval = JSON.stringify(R.path(pathName, trimmedObj));
     const keyEval = JSON.stringify(key);
-    if (valueEval.length > keyEval.length) {
+    if (byteSize(valueEval) > byteSize(keyEval)) {
       // remove the value
       trimmedObj = R.modifyPath(pathName, e => '...' , trimmedObj); 
     } else {
       // remove the name
       trimmedObj = R.dissocPath(pathName, trimmedObj); 
     }
-    const newSize = JSON.stringify(trimmedObj).length;
+    const newSize = byteSize(JSON.stringify(trimmedObj));
     if (newSize <= maxBytes) {
       break;
     }
@@ -42,7 +45,7 @@ const getSize  = (parent, obj) => {
     if (typeof value === 'object') {
       returnValue = returnValue.concat(getSize(descriptor, value));
     } else {
-      returnValue.push([descriptor, JSON.stringify(descriptor + value).length])
+      returnValue.push([descriptor, byteSize(JSON.stringify(descriptor + value))])
     }
   });
   return returnValue;
