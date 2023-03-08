@@ -1,12 +1,12 @@
 const R = require('ramda');
 const sizeInKB = require('./kbsize.js');
 
-const limitObjectSize = (obj, maxBytes) => {
+const limitObjectSize = (obj, maxKBytes) => {
   // Get the current size of the object
-  const initialSize = JSON.stringify(obj).length;
+  const initialSize = sizeInKB(JSON.stringify(obj));
 
   // Check if the object is already within the byte limit
-  if (initialSize <= maxBytes) {
+  if (initialSize <= maxKBytes) {
     return obj;
   }
 
@@ -29,7 +29,7 @@ const limitObjectSize = (obj, maxBytes) => {
       trimmedObj = R.dissocPath(pathName, trimmedObj); 
     }
     const newSize = sizeInKB(JSON.stringify(trimmedObj));
-    if (newSize <= maxBytes) {
+    if (newSize <= maxKBytes) {
       break;
     }
   }
