@@ -1,14 +1,13 @@
 const  { Blob } = require('buffer');
+const sizeInKB = require('./utils/kbsize.js')
 
 const { limitObjectSize } = require('./utils/limit-object-size.js');
-const OBJECT_SIZE_LIMIT = 200 * 1e3 // in bytes
+const OBJECT_SIZE_LIMIT = 256 // in kbytes
 const {
   env: {
     NODE_ENV: env,
   },
 } = process;
-
-const byteSize = str => new Blob([str]).size;
 
 class Plugin {
   constructor(params = {}) {
@@ -42,7 +41,7 @@ class Plugin {
             Source: pluginObj.Source || 'ti2',
           }],
         };
-        if (byteSize(JSON.stringify(events)) < OBJECT_SIZE_LIMIT) {
+        if (sizeInKB(JSON.stringify(events)) < OBJECT_SIZE_LIMIT) {
           await pluginObj.cwEvents.putEvents(events).promise();
         } else {
           console.log('unable to log to cloudwatch (size constraint)', events);
