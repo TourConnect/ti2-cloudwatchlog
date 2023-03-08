@@ -1,7 +1,21 @@
 const EventEmitter = require('eventemitter2');
 const R = require('ramda');
-const longPayload = require('./__fixtures__/payload.json');
+const payload = require('./__fixtures__/payload.json');
 const Plugin = require('./index.js');
+
+function generateString() {
+  let result = "";
+  const alphabet = "abcdefghijklmnopqrstuvwxyz";
+  const targetLength = 256000;
+
+  while (result.length < targetLength) {
+    const randomIndex = Math.floor(Math.random() * alphabet.length);
+    const randomLetter = alphabet[randomIndex];
+    result += randomLetter;
+  }
+
+  return result;
+}
 
 describe('Plugin', () => {
   describe('eventHandler', () => {
@@ -17,6 +31,11 @@ describe('Plugin', () => {
         CloudWatchEvents: jest.fn().mockReturnValue(cwEventsMock),
       };
       jest.mock('aws-sdk', () => mockAWS);
+      const longPayload = R.assocPath(
+        ['object', 'data', 'attribute16'],
+        generateString(),
+        payload,
+      )
       const eventEmitterMock = {
         on: (eventName, callback) => callback(longPayload),
       };
