@@ -1,4 +1,4 @@
-const { Blob } = require('node:buffer');
+const { Blob } = require('buffer');
 
 const sizeInKB = str => {
   const blob = new Blob([str]);
