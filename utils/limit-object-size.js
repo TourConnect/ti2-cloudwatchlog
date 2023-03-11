@@ -37,6 +37,7 @@ const limitObjectSize = (obj, maxKBytes) => {
 }
 
 const getSize  = (parent, obj) => {
+  if (!obj) return [];
   let returnValue = [];
   Object.entries(obj).forEach(([attribute, value]) => {
     const descriptor = [parent, attribute].filter(e => e !== '').join('.');
