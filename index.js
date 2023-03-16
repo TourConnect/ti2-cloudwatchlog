@@ -1,7 +1,6 @@
 const  { Blob } = require('buffer');
-const sizeInKB = require('./utils/kbsize.js')
 
-const { limitObjectSize } = require('./utils/limit-object-size.js');
+const { limitObjectSize, sizeInKB } = require('limit-object-size');
 const OBJECT_SIZE_LIMIT = 256 // in kbytes
 const {
   env: {
