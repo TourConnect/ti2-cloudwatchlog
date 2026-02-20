@@ -43,7 +43,14 @@ class Plugin {
         if (sizeInKB(JSON.stringify(events)) < OBJECT_SIZE_LIMIT) {
           await pluginObj.cwEvents.putEvents(events).promise();
         } else {
-          console.log('unable to log to cloudwatch (size constraint)', events);
+          const estimatedSizeKB = sizeInKB(JSON.stringify(events));
+          const requestId = body && body.requestId ? body.requestId : undefined;
+          console.log('unable to log to cloudwatch (size constraint)', {
+            DetailType: this.event,
+            Source: pluginObj.Source || 'ti2',
+            estimatedSizeKB,
+            requestId,
+          });
         }
       });
     });
