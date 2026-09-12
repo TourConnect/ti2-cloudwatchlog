@@ -27,7 +27,11 @@ describe('Plugin', () => {
         'Source': 'test'
       }));
       plugin.eventHandler(ti2Events);
-      ti2Events.emit('request.something', { foo: 'bar' });
+      ti2Events.emit('request.something', {
+        foo: 'bar',
+        fullSyncAdmissionToken: 'reservation-owner',
+        body: { fullSyncAdmissionToken: 'request-reservation-owner' },
+      });
       await new Promise(resolve => setTimeout(resolve, 100)); // wait for async operations to complete
       expect(cwEventsMock.putEvents).toHaveBeenCalled();
       expect(cwEventsMock.putEvents.mock.calls[0][0]).toEqual({
@@ -36,6 +40,8 @@ describe('Plugin', () => {
             Detail: JSON.stringify({
               env: process.env.NODE_ENV,
               foo: 'bar',
+              fullSyncAdmissionToken: '[REDACTED]',
+              body: { fullSyncAdmissionToken: '[REDACTED]' },
             }),
             DetailType: 'request.something',
             Source: 'test',

@@ -8,6 +8,17 @@ const {
   },
 } = process;
 
+const redactAdmissionTokens = value => {
+  if (Array.isArray(value)) return value.map(redactAdmissionTokens);
+  if (!value || typeof value !== 'object') return value;
+  return Object.entries(value).reduce((result, [key, item]) => ({
+    ...result,
+    [key]: key === 'fullSyncAdmissionToken'
+      ? '[REDACTED]'
+      : redactAdmissionTokens(item),
+  }), {});
+};
+
 class Plugin {
   constructor(params = {}) {
     Object.entries(params).forEach(([attr, value]) => {
@@ -34,7 +45,7 @@ class Plugin {
           Entries: [{
             Detail: JSON.stringify(limitObjectSize({
               env,
-              ...body,
+              ...redactAdmissionTokens(body),
             }, (OBJECT_SIZE_LIMIT - 75))),
             DetailType: this.event,
             Source: pluginObj.Source || 'ti2',
