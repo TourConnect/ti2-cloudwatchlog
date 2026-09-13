@@ -16,9 +16,6 @@ describe('Plugin', () => {
         CloudWatchEvents: jest.fn().mockReturnValue(cwEventsMock),
       };
       jest.mock('aws-sdk', () => mockAWS);
-      const eventEmitterMock = {
-        on: (eventName, callback) => callback({ foo: 'bar' }),
-      };
       const plugin = await (new Plugin({
         events2log: 'request.*',
         'AWS-ACCESS-KEY': 'ACCESS-KEY',
@@ -27,27 +24,52 @@ describe('Plugin', () => {
         'Source': 'test'
       }));
       plugin.eventHandler(ti2Events);
-      ti2Events.emit('request.something', {
+      const widePayload = Object.fromEntries(Array.from(
+        { length: 8000 },
+        (_, index) => [`field${index}`, 'x'],
+      ));
+      const admissionToken = `reservation-owner-${'x'.repeat(80 * 1024)}`;
+      const payload = {
+        ...widePayload,
         foo: 'bar',
-        fullSyncAdmissionToken: 'reservation-owner',
+        fullSyncAdmissionToken: admissionToken,
         body: { fullSyncAdmissionToken: 'request-reservation-owner' },
-      });
+        items: [{ fullSyncAdmissionToken: 'array-reservation-owner' }],
+        createdAt: new Date('2026-09-12T12:34:56.000Z'),
+        attachment: Buffer.from('abc'),
+        serialized: {
+          toJSON: () => ({
+            fullSyncAdmissionToken: 'serialized-reservation-owner',
+            retained: true,
+          }),
+        },
+      };
+      const startedAt = Date.now();
+      ti2Events.emit('request.something', payload);
+      expect(Date.now() - startedAt).toBeLessThan(2000);
       await new Promise(resolve => setTimeout(resolve, 100)); // wait for async operations to complete
       expect(cwEventsMock.putEvents).toHaveBeenCalled();
-      expect(cwEventsMock.putEvents.mock.calls[0][0]).toEqual({
-        Entries: [
-          {
-            Detail: JSON.stringify({
-              env: process.env.NODE_ENV,
-              foo: 'bar',
-              fullSyncAdmissionToken: '[REDACTED]',
-              body: { fullSyncAdmissionToken: '[REDACTED]' },
-            }),
-            DetailType: 'request.something',
-            Source: 'test',
-          },
-        ],
+      const loggedEntry = cwEventsMock.putEvents.mock.calls[0][0].Entries[0];
+      const loggedDetail = JSON.parse(loggedEntry.Detail);
+      expect(loggedEntry).toEqual({
+        Detail: expect.any(String),
+        DetailType: 'request.something',
+        Source: 'test',
       });
+      expect(loggedDetail.fullSyncAdmissionToken).toBe('[REDACTED]');
+      expect(loggedDetail.body.fullSyncAdmissionToken).toBe('[REDACTED]');
+      expect(loggedDetail.items[0].fullSyncAdmissionToken).toBe('[REDACTED]');
+      expect(loggedDetail.createdAt).toBe('2026-09-12T12:34:56.000Z');
+      expect(loggedDetail.attachment).toEqual({
+        type: 'Buffer',
+        data: [97, 98, 99],
+      });
+      expect(loggedDetail.serialized).toEqual({
+        fullSyncAdmissionToken: '[REDACTED]',
+        retained: true,
+      });
+      expect(loggedDetail.field7999).toBe('x');
+      expect(payload.fullSyncAdmissionToken).toBe(admissionToken);
     });
   });
 });
