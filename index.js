@@ -8,6 +8,13 @@ const {
   },
 } = process;
 
+const redactAdmissionTokens = value => {
+  const serialized = JSON.stringify(value, (key, item) => (
+    key === 'fullSyncAdmissionToken' ? '[REDACTED]' : item
+  ));
+  return serialized === undefined ? value : JSON.parse(serialized);
+};
+
 class Plugin {
   constructor(params = {}) {
     Object.entries(params).forEach(([attr, value]) => {
@@ -34,7 +41,7 @@ class Plugin {
           Entries: [{
             Detail: JSON.stringify(limitObjectSize({
               env,
-              ...body,
+              ...redactAdmissionTokens(body),
             }, (OBJECT_SIZE_LIMIT - 75))),
             DetailType: this.event,
             Source: pluginObj.Source || 'ti2',
